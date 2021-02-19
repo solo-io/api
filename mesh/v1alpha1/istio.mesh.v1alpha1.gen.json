@@ -253,6 +253,13 @@
             "description": "If enabled, Istio agent will merge metrics exposed by the application with metrics from Envoy and Istio agent. The sidecar injection will replace `prometheus.io` annotations present on the pod and redirect them towards Istio agent, which will then merge metrics of from the application with Istio metrics. This relies on the annotations `prometheus.io/scrape`, `prometheus.io/port`, and `prometheus.io/path` annotations. If you are running a separately managed Envoy with an Istio sidecar, this may cause issues, as the metrics will collide. In this case, it is recommended to disable aggregation on that deployment with the `prometheus.istio.io/merge-metrics: \"false\"` annotation. If not specified, this will be enabled by default.",
             "type": "boolean",
             "nullable": true
+          },
+          "discoverySelectors": {
+            "description": "A list of Kubernetes selectors that specify the set of namespaces that Istio considers when computing configuration updates for sidecars. This can be used to reduce Istio's computational load by limiting the number of entities (including services, pods, and endpoints) that are watched and processed. If omitted, Istio will use the default behavior of processing all namespaces in the cluster. Elements in the list are disjunctive (OR semantics), i.e. a namespace will be included if it matches any selector. The following example selects any namespace with either labels `env: prod` and `region: us-east1`, or with label `app` equal to `cassandra` or `spark`. ```yaml discoverySelectors: - matchLabels: env: prod region: us-east1 - matchExpressions: - key: app operator: In values: - cassandra - spark ``` Refer to the [kubernetes selector docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors) for additional detail on selector semantics.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector"
+            }
           }
         }
       },
@@ -1138,6 +1145,26 @@
           }
         }
       },
+      "k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector": {
+        "type": "object",
+        "properties": {
+          "matchLabels": {
+            "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed. +optional",
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "format": "string"
+            }
+          },
+          "matchExpressions": {
+            "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed. +optional",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement"
+            }
+          }
+        }
+      },
       "istio.networking.v1alpha3.ClientTLSSettings.TLSmode": {
         "description": "Indicates whether connections to this port should be secured using TLS. The value of this field determines how TLS is enforced.",
         "type": "string",
@@ -1177,6 +1204,29 @@
             "description": "Destination region the traffic will fail over to when endpoints in the 'from' region becomes unhealthy.",
             "type": "string",
             "format": "string"
+          }
+        }
+      },
+      "k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelectorRequirement": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "description": "key is the label key that the selector applies to. +patchMergeKey=key +patchStrategy=merge",
+            "type": "string",
+            "format": "string"
+          },
+          "operator": {
+            "description": "operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.",
+            "type": "string",
+            "format": "string"
+          },
+          "values": {
+            "description": "values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch. +optional",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "string"
+            }
           }
         }
       }
