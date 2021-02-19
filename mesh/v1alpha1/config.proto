@@ -18,6 +18,7 @@ import "google/protobuf/duration.proto";
 import "google/protobuf/wrappers.proto";
 import "mesh/v1alpha1/proxy.proto";
 import "networking/v1alpha3/destination_rule.proto";
+import "k8s.io/apimachinery/pkg/apis/meta/v1/generated.proto";
 
 // $title: Global Mesh Options
 // $description: Configuration affecting the service mesh as a whole.
@@ -485,11 +486,34 @@ message MeshConfig {
   // If not specified, this will be enabled by default.
   google.protobuf.BoolValue enable_prometheus_merge = 51;
 
+  // A list of Kubernetes selectors that specify the set of namespaces that Istio considers when
+  // computing configuration updates for sidecars. This can be used to reduce Istio's computational load
+  // by limiting the number of entities (including services, pods, and endpoints) that are watched and processed.
+  // If omitted, Istio will use the default behavior of processing all namespaces in the cluster.
+  // Elements in the list are disjunctive (OR semantics), i.e. a namespace will be included if it matches any selector.
+  // The following example selects any namespace with either labels `env: prod` and `region: us-east1`,
+  // or with label `app` equal to `cassandra` or `spark`.
+  // ```yaml
+  // discoverySelectors:
+  //  - matchLabels:
+  //      env: prod
+  //      region: us-east1
+  //  - matchExpressions:
+  //    - key: app
+  //      operator: In
+  //      values:
+  //        - cassandra
+  //        - spark
+  // ```
+  // Refer to the [kubernetes selector docs](https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/#label-selectors)
+  // for additional detail on selector semantics.
+  repeated k8s.io.apimachinery.pkg.apis.meta.v1.LabelSelector discovery_selectors = 54;
+
   reserved 53;
   reserved "termination_drain_duration";
 
   // $hide_from_docs
-  // Next available field number: 54
+  // Next available field number: 55
 }
 
 // Resource describes the source of configuration
